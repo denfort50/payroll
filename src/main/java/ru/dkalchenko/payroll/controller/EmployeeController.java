@@ -1,12 +1,19 @@
 package ru.dkalchenko.payroll.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
 import ru.dkalchenko.payroll.exception.EmployeeNotFoundException;
 import ru.dkalchenko.payroll.model.Employee;
 import ru.dkalchenko.payroll.service.EmployeeService;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 
 @RestController
 @RequestMapping("/employees")
@@ -15,9 +22,14 @@ public class EmployeeController {
 
     private final EmployeeService service;
 
-    @GetMapping
-    public List<Employee> all() {
-        return service.findAll();
+    private final EmployeeModelAssembler assembler;
+
+    @GetMapping()
+    public CollectionModel<EntityModel<Employee>> all() {
+        List<EntityModel<Employee>> employees = service.findAll().stream() //
+                .map(assembler::toModel) //
+                .collect(Collectors.toList());
+        return CollectionModel.of(employees, linkTo(methodOn(EmployeeController.class).all()).withSelfRel());
     }
 
     @PostMapping
@@ -26,9 +38,10 @@ public class EmployeeController {
     }
 
     @GetMapping("/{id}")
-    public Employee one(@PathVariable Long id) {
-        return service.findById(id)
+    public EntityModel<Employee> one(@PathVariable Long id) {
+        Employee employee = service.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
+        return assembler.toModel(employee);
     }
 
     @PutMapping("/{id}")

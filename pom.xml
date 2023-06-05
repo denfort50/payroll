@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>ru.dkalchenko</groupId>
 	<artifactId>payroll</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0</version>
 	<name>payroll</name>
 	<description>Payroll Service</description>
 	<properties>

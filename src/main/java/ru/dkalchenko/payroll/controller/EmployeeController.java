@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.dkalchenko.payroll.exception.EmployeeNotFoundException;
 import ru.dkalchenko.payroll.model.Employee;
@@ -33,8 +35,11 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public Employee newEmployee(@RequestBody Employee newEmployee) {
-        return service.save(newEmployee);
+    public ResponseEntity<?> newEmployee(@RequestBody Employee newEmployee) {
+        EntityModel<Employee> entityModel = assembler.toModel(service.save(newEmployee));
+        return ResponseEntity
+                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(entityModel);
     }
 
     @GetMapping("/{id}")
@@ -45,8 +50,8 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    public Employee replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
-        return service.findById(id)
+    public ResponseEntity<?> replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
+        Employee updatedEmployee = service.findById(id)
                 .map(employee -> {
                     employee.setName(newEmployee.getName());
                     employee.setRole(newEmployee.getRole());
@@ -56,10 +61,15 @@ public class EmployeeController {
                     newEmployee.setId(id);
                     return service.save(newEmployee);
                 });
+        EntityModel<Employee> entityModel = assembler.toModel(updatedEmployee);
+        return ResponseEntity
+                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(entityModel);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
         service.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

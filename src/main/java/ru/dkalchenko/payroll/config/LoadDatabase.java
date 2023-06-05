@@ -6,7 +6,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ru.dkalchenko.payroll.model.Employee;
-import ru.dkalchenko.payroll.repository.EmployeeRepository;
+import ru.dkalchenko.payroll.model.Order;
+import ru.dkalchenko.payroll.model.Status;
+import ru.dkalchenko.payroll.service.EmployeeService;
+import ru.dkalchenko.payroll.service.OrderService;
 
 @Configuration
 public class LoadDatabase {
@@ -14,10 +17,14 @@ public class LoadDatabase {
     private static final Logger log = LoggerFactory.getLogger(LoadDatabase.class);
 
     @Bean
-    CommandLineRunner initDatabase(EmployeeRepository repository) {
+    public CommandLineRunner initDatabase(EmployeeService employeeService, OrderService orderService) {
         return args -> {
-            log.info("Preloading " + repository.save(new Employee("Bilbo Baggins", "burglar")));
-            log.info("Preloading " + repository.save(new Employee("Frodo Baggins", "thief")));
+            employeeService.save(new Employee("Bilbo", "Baggins", "burglar"));
+            employeeService.save(new Employee("Frodo", "Baggins", "thief"));
+            employeeService.findAll().forEach(employee -> log.info("Preloaded " + employee));
+            orderService.save(new Order("MacBook Pro", Status.COMPLETED));
+            orderService.save(new Order("iPhone", Status.IN_PROGRESS));
+            orderService.findAll().forEach(order -> log.info("Preloaded " + order));
         };
     }
 }
